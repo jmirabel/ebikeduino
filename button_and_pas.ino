@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include <rgb_lcd.h>
+#include "config.h"
 #include "button.h"
 #include "assistance.h"
 #include "throttle.h"
@@ -12,9 +12,9 @@
 rgb_lcd lcd;
 Buttons buttons(4, 5);  // red then green
 Assistance assistance;
-Throttle throttle(A1);  // TODO
+Throttle throttle(A1, &config);
 constexpr uint8_t PAS_SENSOR_PIN = 2;
-PasSensor pasSensor;
+PasSensor pasSensor(&config);
 constexpr uint8_t PPM_PIN = 6;
 PpmControl control;
 
@@ -24,8 +24,8 @@ UARTDisplay display;
 Button brakeSensor(7);
 
 void setup() {
-  serialCommands.readSerial();
-
+  config.eepromRead();
+  
   buttons.setup();
   brakeSensor.setup();
   control.setup(PPM_PIN);
@@ -63,6 +63,7 @@ void loop() {
   if (pasSensor.changed)
     display.set_pedaling_state(pasSensor.pedaling);
 
+  display.set_throttle_value(throttle.value);
   if (!braking && pasSensor.pedaling) {
     int v0 = assistance.map(control.low, control.high);
     int v1 = throttle.map(control.low, control.high);
