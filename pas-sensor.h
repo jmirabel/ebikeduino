@@ -9,7 +9,6 @@ struct PasSensor {
   static PasSensor* _instanceForInterrupt;
   volatile unsigned long lastPASRisingEdge = 0;
 
-  bool rising = false;
   bool pedaling = false;
   bool changed = false;
 
@@ -19,23 +18,25 @@ struct PasSensor {
     : config(cfg) {}
 
   void setup(uint8_t pin) {
-    pinMode(pin, INPUT_PULLUP);
+    pinMode(pin, INPUT);
     _instanceForInterrupt = this;
     attachInterrupt(digitalPinToInterrupt(pin), PasSensor::interruptPedalSensor, RISING);
   }
 
   void handleRisingPAS() {
     lastPASRisingEdge = millis();
-    rising = true;
+    // risingEdgeCount++;
   }
 
   static void interruptPedalSensor() {
-    if (_instanceForInterrupt != NULL) {
-      _instanceForInterrupt->handleRisingPAS();
-    }
+    // if (_instanceForInterrupt != NULL) {
+    _instanceForInterrupt->handleRisingPAS();
+    // }
   }
 
   void loop() {
+    // Default value is true. When pas_detection_time_ms is 0, the PAS sensor is disabled and `pedaling`
+    // should be set to true.
     bool newPedaling = true;
     if (config->pas_detection_time_ms > 0) {
       newPedaling = ((millis() - lastPASRisingEdge) < config->pas_detection_time_ms);
