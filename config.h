@@ -9,6 +9,7 @@ struct Config {
   int throttle_max = 510;
 
   uint8_t pas_detection_time_ms = 250; // Set to 0 to disable PAS (always pedaling)
+  uint8_t pas_rising_edge_count = 4;
 
   uint8_t foot_mode_timeout_sec = 60;
 

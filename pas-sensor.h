@@ -9,6 +9,8 @@ struct PasSensor {
 
   static PasSensor* _instanceForInterrupt;
   volatile unsigned long lastPASRisingEdge = 0;
+  volatile unsigned long period = 0;
+  volatile uint8_t risingEdgeCount = 0;
 
   bool pedaling = false;
   bool changed = false;
@@ -25,8 +27,11 @@ struct PasSensor {
   }
 
   void handleRisingPAS() {
-    lastPASRisingEdge = millis();
-    // risingEdgeCount++;
+    unsigned long time = millis();
+    period = time - lastPASRisingEdge;
+    lastPASRisingEdge = time;
+    if (risingEdgeCount < 32)
+        risingEdgeCount++;
   }
 
   static void interruptPedalSensor() {
@@ -40,7 +45,13 @@ struct PasSensor {
     // should be set to true.
     bool newPedaling = true;
     if (config->pas_detection_time_ms > 0) {
-      newPedaling = ((millis() - lastPASRisingEdge) < config->pas_detection_time_ms);
+      bool within_timeout = ((millis() - lastPASRisingEdge) < config->pas_detection_time_ms);
+      if (!within_timeout) {
+        risingEdgeCount = 0;
+        newPedaling = false;
+      } else {
+        newPedaling = (risingEdgeCount >= config->pas_rising_edge_count);
+      }
     }
     changed = (newPedaling != pedaling);
     pedaling = newPedaling;

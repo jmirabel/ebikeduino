@@ -19,6 +19,8 @@ void cmd_config_print(SerialCommands& sender, Args& args) {
   sender.getSerial().println(config.throttle_max);
   sender.getSerial().print("pas_detection_time_ms: ");
   sender.getSerial().println(config.pas_detection_time_ms);
+  sender.getSerial().print("pas_rising_edge_count: ");
+  sender.getSerial().println(config.pas_rising_edge_count);
   sender.getSerial().print("foot_mode_timeout_sec: ");
   sender.getSerial().println(config.foot_mode_timeout_sec);
 }
@@ -53,6 +55,15 @@ void cmd_config_set_pas_detection_time_ms(SerialCommands& sender, Args& args) {
   config.pas_detection_time_ms = value;
 }
 
+void cmd_config_set_pas_rising_edge_count(SerialCommands& sender, Args& args) {
+  int value = args[0].getInt();
+  if (value < 0 || value >= 32) {
+    sender.getSerial().print("cannot set rising edge count. Illegal value provided: ");
+    sender.getSerial().println(value);
+  }
+  config.pas_rising_edge_count = decltype(config.pas_rising_edge_count) (value);
+}
+
 void cmd_config_set_foot_mode_timeout_sec(SerialCommands& sender, Args& args) {
   decltype(config.foot_mode_timeout_sec) value = args[0].getInt();
   config.foot_mode_timeout_sec = value;
@@ -66,6 +77,7 @@ Command cfgCommands[]{
   COMMAND(cmd_config_set_throttle_min, "set_throttle_min", ArgType::Int, nullptr, ""),
   COMMAND(cmd_config_set_throttle_max, "set_throttle_max", ArgType::Int, nullptr, ""),
   COMMAND(cmd_config_set_pas_detection_time_ms, "set_pas_detection_time_ms", ArgType::Int, nullptr, ""),
+  COMMAND(cmd_config_set_pas_rising_edge_count, "set_pas_rising_edge_count", ArgType::Int, nullptr, ""),
   COMMAND(cmd_config_set_foot_mode_timeout_sec, "foot_mode_timeout_sec", ArgType::Int, nullptr, ""),
 };
 
