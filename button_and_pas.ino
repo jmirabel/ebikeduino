@@ -11,7 +11,7 @@
 
 rgb_lcd lcd;
 Buttons buttons(4, 5);  // red then green
-Assistance assistance;
+Assistance assistance(&config);
 Throttle throttle(A1, &config);
 constexpr uint8_t PAS_SENSOR_PIN = 2;
 PasSensor pasSensor(&config);
@@ -42,11 +42,12 @@ void setup() {
 }
 
 void loop() {
+  auto now = millis();
   buttons.read();
-  brakeSensor.read(millis());
-  assistance.loop();
+  brakeSensor.read(now);
   pasSensor.loop();
   throttle.read();
+  assistance.loop(now, throttle);
 
   if (buttons.red.clicked) {
     assistance.increment();
@@ -55,17 +56,36 @@ void loop() {
   if (buttons.green.clicked) {
     assistance.decrement();
   }
+
+  if (buttons.red.longClicked) {
+    // Throttle can now be used without pedaling
+    assistance.enableFootMode(now);
+  }
+
+  if (buttons.green.longClicked) {
+    // Throttle cannot be used without pedaling. Not that a timer also deactivate this.
+    // Also set the assistance level to 0;
+    assistance.stop();
+  }
+
   bool braking = (brakeSensor.state == Button::STATE_DOWN);
   display.set_brake_state(braking);
 
-  if (assistance.changed)
+  if (assistance.changed) {
     display.set_assistance_level(assistance.level);
+    display.set_foot_mode(assistance.footMode);
+  }
   if (pasSensor.changed)
     display.set_pedaling_state(pasSensor.pedaling);
 
   display.set_throttle_value(throttle.value);
-  if (!braking && pasSensor.pedaling) {
-    int v0 = assistance.map(control.low, control.high);
+  if (!braking && (assistance.footMode || pasSensor.pedaling)) {
+    int v0;
+    if (assistance.footMode && !pasSensor.pedaling) {
+      v0 = control.low;
+    } else {
+      v0 = assistance.map(control.low, control.high);
+    }
     int v1 = throttle.map(control.low, control.high);
     control.write(max(v0, v1));
     display.set_contol(max(v0, v1));

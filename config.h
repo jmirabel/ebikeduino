@@ -10,6 +10,8 @@ struct Config {
 
   uint8_t pas_detection_time_ms = 250; // Set to 0 to disable PAS (always pedaling)
 
+  uint8_t foot_mode_timeout_sec = 60;
+
   void eepromUpdate() {
     EEPROM.put(eepromAddress, *this);
   }

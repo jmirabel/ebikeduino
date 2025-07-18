@@ -53,6 +53,14 @@ public:
       lcd.print('_');
   }
 
+  void set_foot_mode(bool foot_mode) {
+    lcd.setCursor(2, 0);
+    if (foot_mode)
+      lcd.print('F');
+    else
+      lcd.print('_');
+  }
+
   void set_assistance_level(unsigned short level) {
     lcd.setCursor(0, 1);
     lcd.print(level);
@@ -69,7 +77,7 @@ class UARTDisplay : public DisplayBase<I2C16x2Display> {
 private:
   int control;
   int throttle_val;
-  char buffer[20] = "__ L_ \0";
+  char buffer[20] = "___ L_ \0";
   unsigned long nextPrint = 0;
 
 public:
@@ -80,7 +88,7 @@ public:
   void loop() {
     if (Serial) {
       if (millis() > nextPrint) {
-        sprintf(&buffer[6], "T%d C%d", throttle_val, control);
+        sprintf(&buffer[7], "T%d C%d", throttle_val, control);
         nextPrint = millis() + printPeriodMs;
         Serial.println(buffer);
       }
@@ -95,14 +103,19 @@ public:
     buffer[1] = braking ? 'B' : '_';
   }
 
+  void set_foot_mode(bool foot_mode) {
+    buffer[2] = foot_mode ? 'F' : '_';
+  }
+
   void set_assistance_level(unsigned short level) {
+    constexpr uint8_t i = 5;
     switch (level) {
-      case 0: buffer[4] = '0'; break;
-      case 1: buffer[4] = '1'; break;
-      case 2: buffer[4] = '2'; break;
-      case 3: buffer[4] = '3'; break;
-      case 4: buffer[4] = '4'; break;
-      default: buffer[4] = '?'; break;
+      case 0: buffer[i] = '0'; break;
+      case 1: buffer[i] = '1'; break;
+      case 2: buffer[i] = '2'; break;
+      case 3: buffer[i] = '3'; break;
+      case 4: buffer[i] = '4'; break;
+      default: buffer[i] = '?'; break;
     }
     return;
   }

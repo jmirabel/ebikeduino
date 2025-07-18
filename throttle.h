@@ -1,5 +1,8 @@
+#pragma once
+
 #include "config.h"
 #include "HardwareSerial.h"
+
 struct Throttle {
   // Calibration procedure ?
   // static constexpr int max = 1024;
@@ -29,6 +32,10 @@ struct Throttle {
     //   Serial.print(' ');
     //   Serial.println(max_);
     // }
+  }
+
+  bool isLowest() const {
+    return value == config->throttle_min;
   }
 
   inline int map(int toLow, int toHigh) {
